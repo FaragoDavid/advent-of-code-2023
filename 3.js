@@ -177,37 +177,32 @@ console.log("Part 1 result:", part1(input));
 
 //================================================================================================================================
 
-const getGearIndices = (str) =>
-  [...str.matchAll(/\*/g)].map(({ index }) => index);
-const recordGear = (gears, rowIndex, colIndex, num) => {
-  const gearKey = `${rowIndex}_${colIndex}`;
-  if (!gears[gearKey]) gears[gearKey] = [];
-  gears[gearKey].push(Number(num));
-};
 function part2(input) {
   const gears = {};
+  const recordGear = (row, rowIndex, match) => {
+    const segmentStart = Math.max(0, match.index - 1);
+    const segmentEnd = Math.min(
+      row.length - 1,
+      match.index + match[0].length + 1
+    );
+
+    [...row.slice(segmentStart, segmentEnd).matchAll(/\*/g)]
+      .map(({ index }) => index)
+      .forEach((gearColIndex) => {
+        const gearKey = `${rowIndex}_${segmentStart + gearColIndex}`;
+        if (!gears[gearKey]) gears[gearKey] = [];
+        gears[gearKey].push(Number(match[0]));
+      });
+  };
 
   input.split`\n`.forEach((row, rowIndex, rows) => {
-    [...row.matchAll(/[0-9]+/g)].map(({ 0: num, index }) => {
-      const segmentStart = Math.max(0, index - 1);
-      const segmentEnd = Math.min(row.length - 1, index + num.length + 1);
-
-      getGearIndices(row.slice(segmentStart, segmentEnd)).forEach((i) => {
-        recordGear(gears, rowIndex, segmentStart + i, num);
-      });
+    [...row.matchAll(/[0-9]+/g)].map((match) => {
+      recordGear(row, rowIndex, match);
       if (rowIndex > 0) {
-        getGearIndices(
-          rows[rowIndex - 1].slice(segmentStart, segmentEnd)
-        ).forEach((i) => {
-          recordGear(gears, rowIndex - 1, segmentStart + i, num);
-        });
+        recordGear(rows[rowIndex - 1], rowIndex - 1, match);
       }
       if (rowIndex < rows.length - 1) {
-        getGearIndices(
-          rows[rowIndex + 1].slice(segmentStart, segmentEnd)
-        ).forEach((i) => {
-          recordGear(gears, rowIndex + 1, segmentStart + i, num);
-        });
+        recordGear(rows[rowIndex + 1], rowIndex + 1, match);
       }
     });
   });
