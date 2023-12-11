@@ -190,9 +190,41 @@ console.log("Part 1 result:", part1(input));
 
 //================================================================================================================================
 
-// function part2(input) {
-//
-// }
-//
-// console.log("Part 2 expected:", , "actual: ", part2(example));
-// console.log("Part 2 result:", part2(input));
+function part2(input, expansionFactor) {
+
+    let emptyRows = []
+    const map = input.split`\n`.map((row, rowIndex) => {
+        if(row.split``.every(v => v === '.')) emptyRows.push(rowIndex)
+
+        return row.split``
+    });
+
+    let emptyCols = map[0].reduce((emptyCols, col, colIndex) => {
+        if(Array.from({length: map.length}, (_, rowIndex) => map[rowIndex][colIndex]).every(v => v === '.'))
+            emptyCols.push(colIndex)
+
+            return emptyCols
+    }, []);
+    
+    return map.reduce((galaxies, row, rowIndex) => {
+        row.forEach((col, colIndex) => {
+            if(col === '#') galaxies.push({
+                row: rowIndex + emptyRows.filter(emptyRow => emptyRow < rowIndex).length * (expansionFactor - 1), 
+                col: colIndex + emptyCols.filter(emptyCol => emptyCol < colIndex).length * (expansionFactor - 1),
+            })
+        });
+        return galaxies;
+    }, []).reduce((total, g1, g1Index, galaxies) => {
+        galaxies.forEach((g2, g2Index) => {
+            if(g1Index < g2Index) {
+                total += Math.abs(g2.col - g1.col) + (g2.row - g1.row);
+            }
+        })
+
+        return total;
+    }, 0)
+}
+
+console.log("Part 2 expected:", 1030, "actual: ", part2(example, 10));
+console.log("Part 2 expected:", 8410, "actual: ", part2(example, 100));
+console.log("Part 2 result:", part2(input, 1000000));
