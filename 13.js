@@ -1401,45 +1401,41 @@ console.log('Part 1 result:', part1(input));
 //================================================================================================================================
 
 function part2(input) {
+  let result = 0;
 
-    let result = 0;
+  const findIndex = (rows, factor) => {
+    for (let rowIndex = 0; rowIndex < Math.floor(rows.length / 2); rowIndex++) {
+      const topRows = rows.slice(0, rowIndex + 1);
+      const botRows = rows.slice(rows.length - rowIndex - 1);
 
-    const findIndex = (rows, factor) => {
-      for (let rowIndex = 0; rowIndex < Math.floor(rows.length / 2); rowIndex++) {
-        const topRows = rows.slice(0, rowIndex + 1);
-        const botRows = rows.slice(rows.length - rowIndex - 1);
-  
-        const topRowsReflected = rows.slice(rowIndex + 1, 2 * (rowIndex + 1)).reverse();
-        const botRowsReflected = rows.slice(rows.length - 2 * (rowIndex + 1), rows.length - rowIndex - 1).reverse();
-  
-        let smudges = 0;
-        for (let topRowIndex = 0; topRowIndex < topRows.length && smudges < 2; topRowIndex++) {
-            topRows[topRowIndex].split``.forEach((col, colIndex) => {
-                smudges += col !== topRowsReflected[topRowIndex][colIndex] ? 1 : 0
-            });
-        }
-        if(smudges === 1) return factor * (rowIndex + 1);
+      const topRowsReflected = rows.slice(rowIndex + 1, 2 * (rowIndex + 1)).reverse();
+      const botRowsReflected = rows.slice(rows.length - 2 * (rowIndex + 1), rows.length - rowIndex - 1).reverse();
 
-        smudges = 0;
-        for (let botRowIndex = 0; botRowIndex < botRows.length && smudges < 2; botRowIndex++) {
-            botRows[botRowIndex].split``.forEach((col, colIndex) => {
-                smudges += col !== botRowsReflected[botRowIndex][colIndex] ? 1 : 0
-            });
-        };
-        if(smudges === 1) return factor * (rows.length - (rowIndex + 1));
+      let topSmudges = 0;
+      let botSmudges = 0;
+      for (let ri = 0; ri < topRows.length && (topSmudges < 2 || botSmudges < 2); ri++) {
+        topRows[ri].split``.forEach((col, colIndex) => {
+          topSmudges += col !== topRowsReflected[ri][colIndex];
+        });
+        botRows[ri].split``.forEach((col, colIndex) => {
+          botSmudges += col !== botRowsReflected[ri][colIndex];
+        });
       }
-    };
-  
-    for (const pattern of input.split`\n\n`) {
-      const rows = pattern.split`\n`;
-      const cols = rows[0].split``.map((_, colIndex) => rows.map((row) => row.split``[colIndex]).join``);
-  
-      result += findIndex(cols, 1) ?? 0;
-      result += findIndex(rows, 100) ?? 0;
+      if (topSmudges === 1) return factor * (rowIndex + 1);
+      if (botSmudges === 1) return factor * (rows.length - (rowIndex + 1));
     }
-  
-    return result;
+  };
+
+  return input.split`\n\n`.reduce((total, pattern) => {
+    const rows = pattern.split`\n`;
+    const cols = rows[0].split``.map((_, colIndex) => rows.map((row) => row.split``[colIndex]).join``);
+
+    result += findIndex(cols, 1) ?? 0;
+    result += findIndex(rows, 100) ?? 0;
+
+    return total
+  })
 }
 
-console.log("Part 2 expected:", 400, "actual: ", part2(example));
-console.log("Part 2 result:", part2(input));
+console.log('Part 2 expected:', 400, 'actual: ', part2(example));
+console.log('Part 2 result:', part2(input));
