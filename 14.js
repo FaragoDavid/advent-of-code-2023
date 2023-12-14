@@ -154,42 +154,42 @@ function part2(input) {
 
     return rotatedMatrix.map((row) => row.join(''));
   };
-  const tiltNorth = (newRows, row, rowIndex) => {
-    let newRow = '';
-    row.split``.forEach((tile, colIndex) => {
-      if (tile === '#') newRow += tile;
-      if (colIndex === 0 || (row[colIndex - 1] === '#' && tile !== '#')) {
-        const nextSquareIndex = row.slice(colIndex).indexOf('#');
-        const lastIndex = nextSquareIndex > -1 ? colIndex + nextSquareIndex : row.length;
-        let rocksInSection = (row.slice(colIndex, lastIndex).match(/O/g) || []).length;
-        let newSection = 'O'.repeat(rocksInSection) + '.'.repeat(lastIndex - colIndex - rocksInSection);
-        newRow += newSection;
-      }
-    });
+  const tiltUp = (transposedPlatform) => {
+    return transposedPlatform.reduce((newRows, row) => {
+      let newRow = '';
+      row.split``.forEach((tile, colIndex) => {
+        if (tile === '#') newRow += tile;
+        if (colIndex === 0 || (row[colIndex - 1] === '#' && tile !== '#')) {
+          const nextSquareIndex = row.slice(colIndex).indexOf('#');
+          const lastIndex = nextSquareIndex > -1 ? colIndex + nextSquareIndex : row.length;
+          let rocksInSection = (row.slice(colIndex, lastIndex).match(/O/g) || []).length;
+          let newSection = 'O'.repeat(rocksInSection) + '.'.repeat(lastIndex - colIndex - rocksInSection);
+          newRow += newSection;
+        }
+      });
 
-    newRows.push(newRow);
-    return newRows;
+      newRows.push(newRow);
+      return newRows;
+    }, []);
   };
   const cycle = (platform) => {
-    const northTilted = transpose(transpose(platform).reduce(tiltNorth, []));
-    const westTilted = transpose(transpose(rotateClockwise(northTilted)).reduce(tiltNorth, []));
-    const southTilted = transpose(transpose(rotateClockwise(westTilted)).reduce(tiltNorth, []));
-    const eastTilted = transpose(transpose(rotateClockwise(southTilted)).reduce(tiltNorth, []));
+    const northTilted = transpose(tiltUp(transpose(platform)));
+    const westTilted = transpose(tiltUp(transpose(rotateClockwise(northTilted))));
+    const southTilted = transpose(tiltUp(transpose(rotateClockwise(westTilted))));
+    const eastTilted = transpose(tiltUp(transpose(rotateClockwise(southTilted))));
     return rotateClockwise(eastTilted);
   };
   const calculateLoad = (rows) => {
-    return rows.reduce((total, row) => {
+    return rows.reduce((total, row, rowIndex) => {
       let colTotal = 0;
       row.split``.forEach((tile, colIndex) => {
         if (colIndex === 0 || (row[colIndex - 1] === '#' && tile !== '#')) {
           const nextSquareIndex = row.slice(colIndex).indexOf('#');
           const lastIndex = nextSquareIndex > -1 ? colIndex + nextSquareIndex : rows.length;
-          let rocksInSection = (row.slice(colIndex, lastIndex).match(/O/g) || []).length;
-
-          while (rocksInSection > 0) {
-            colTotal += rows.length - colIndex - rocksInSection + 1;
-            rocksInSection--;
-          }
+          colTotal += [...(row.slice(colIndex, lastIndex).matchAll(/O/g) || [])].reduce(
+            (load, { 0: _, index }) => load + (rows.length - colIndex) - index,
+            0,
+          );
         }
       });
 
@@ -201,16 +201,16 @@ function part2(input) {
   const platforms = [platform.join`|`];
   let cycles = 1;
   while (!platforms.includes((platform = cycle(platform)).join('|'))) {
-    console.log(cycles++, platform.join('|'));
+    cycles++;
     platforms.push(platform.join`|`);
   }
   let startIndex = platforms.indexOf(platform.join('|'));
   let cycleLen = cycles - startIndex;
 
-  const load = calculateLoad(transpose(platforms[startIndex + (1000000000 % cycleLen)].split`|`));
+  const load = calculateLoad(transpose(platforms[(cycles + (1000000000 % cycleLen)) % platforms.length].split`|`));
 
-  return 1;
+  return load;
 }
 
 console.log('Part 2 expected:', 64, 'actual: ', part2(example));
-// console.log("Part 2 result:", part2(input));
+console.log('Part 2 result:', part2(input));
